@@ -1,5 +1,10 @@
 # Udacity-programming-for-DataScience-using-Python-Nanodegree
-This repo contain  codes of Udacity programming for data science course
+
+Date:15.05.2020
+Title:programming_for_DataScience_using_Python
+
+Description: This repo contain  codes of Udacity programming for data science course
+
 Overview
 In this project, the student had to make use of Python to explore data related to bike share systems for three major cities in the United States — Chicago, New York City, and Washington. The student had to write code to (a) import the data and answer interesting questions about it by computing descriptive statistics, and (b) write a script that takes in raw input to create an interactive experience in the terminal to present these statistics.
 
@@ -11,7 +16,7 @@ Check My Project Submission.
 Python Learning In The Course
 Check the link for my learning material. Check this out
 
-Files Used
+Files Used:
 The required files for running this program are:
 
 washington.csv
