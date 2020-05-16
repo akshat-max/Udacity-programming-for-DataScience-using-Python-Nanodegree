@@ -12,9 +12,7 @@
 
 *Check My Project Submission.*
 
-**Files Used:**
-
-The required files for running this program are:
+**Files Used:** The required files for running this program are:
 
 washington.csv
 
