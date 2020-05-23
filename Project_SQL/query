@@ -1,0 +1,104 @@
+ 
+/* Query #1 */
+
+
+
+SELECT  t1.name, t1.standard_quartile, COUNT(t1.standard_quartile)
+	FROM
+		(SELECT distinct c.name ,f.title, f.rental_duration, NTILE(4) OVER (ORDER BY f.rental_duration) AS standard_quartile
+		FROM film_category f_c
+		JOIN category c
+		ON c.category_id = f_c.category_id
+		JOIN film f
+		ON f.film_id = f_c.film_id
+		WHERE  c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')) t1 
+GROUP BY 1, 2
+ORDER BY 1, 2;
+
+
+/* Query #2 */
+
+
+
+SELECT c.name, 
+COUNT(r.rental_id) as rental_count
+ FROM film_category f_c
+ JOIN  category c ON  f_c.category_id=c.category_id
+JOIN film f on f.film_id=f_c.film_id 
+JOIN inventory i on i.film_id=f.film_id 
+JOIN  rental r on r.inventory_id=i.inventory_id
+WHERE  c.name in ('Animation', 'Children', 'Classics',' Comedy', 'Family','Music')
+GROUP BY  1
+ORDER BY  1,2 ;
+
+
+
+/* Query #3 */
+
+
+
+
+ WITH  cust AS (SELECT c.name as name, COUNT(cu.customer_id) as total_demand 
+	FROM  category c 
+	JOIN  film_category f_c ON c.category_id=f_c.category_id 
+	JOIN film f ON f_c.film_id=f.film_id
+	JOIN inventory i  ON  f.film_id=i.film_id
+	JOIN rental r ON  r.inventory_id=i.inventory_id
+	JOIN customer cu ON cu.customer_id=r.customer_id 
+	GROUP BY 1
+	ORDER BY  2 DESC),
+cust2 AS
+ 	(SELECT c.name AS  name,SUM(p.amount)  AS total_sales
+          FROM category c 
+          JOIN film_category f_c ON c.category_id=f_c.category_id 
+	JOIN film f ON f_c.film_id=f.film_id
+	JOIN inventory i ON f.film_id=i.film_id
+	JOIN rental r ON r.inventory_id=i.inventory_id
+	JOIN payment p ON  r.rental_id=p.rental_id 
+	GROUP BY 1 
+	ORDER BY  2 desc)
+SELECT cust.name, cust.total_demand, cust2.total_sales
+FROM cust 
+JOIN cust2 
+ON cust.name= cust2.name
+
+
+/* Query #4 */
+
+WITH l1 AS (SELECT (first_name || ' ' || last_name) AS name, 
+                   c.customer_id, 
+                   p.amount, 
+                   p.payment_date
+              	FROM customer AS c
+                   JOIN payment AS p
+                    ON c.customer_id = p.customer_id),
+
+     l2 AS (SELECT l1.customer_id
+              FROM l1
+             GROUP BY 1
+             ORDER BY SUM(l1.amount) DESC
+             LIMIT 10),
+
+
+l3 AS (SELECT l1.name,
+              DATE_PART('month', l1.payment_date) AS payment_month, 
+              DATE_PART('year', l1.payment_date) AS payment_year,
+              COUNT (*),
+              SUM(l1.amount),
+              SUM(l1.amount) AS total,
+              LEAD(SUM(l1.amount)) OVER(PARTITION BY l1.name ORDER BY DATE_PART('month', l1.payment_date)) AS lead,
+              LEAD(SUM(l1.amount)) OVER(PARTITION BY l1.name ORDER BY DATE_PART('month', l1.payment_date)) - SUM(l1.amount) AS lead_dif
+         FROM l1
+              JOIN l2
+               ON l1.customer_id = l2.customer_id
+        WHERE l1.payment_date BETWEEN '20070101' AND '20080101'
+        GROUP BY 1, 2, 3
+        ORDER BY 1, 3, 2)
+
+SELECT l3.*,
+       CASE
+           WHEN l3.lead_dif = (SELECT MAX(l3.lead_dif) FROM l3 ORDER BY 1 DESC LIMIT 1) THEN 'this is the maximum difference'
+           ELSE NULL
+           END AS is_max					
+  FROM l3
+ ORDER BY 1;
